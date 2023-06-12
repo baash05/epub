@@ -1,31 +1,98 @@
-# Epub
+# Epub Builder
+Convert html text, and images into Epub files, that can be viewed on most modern operating systems, and uploaded to amazon kindle devices.
 
-TODO: Delete this and the text below, and describe your gem
-
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/epub`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-## Installation
-
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
-
-Install the gem and add to the application's Gemfile by executing:
-
-    $ bundle add UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG
-
-If bundler is not being used to manage dependencies, install the gem by executing:
-
-    $ gem install UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG
+## In Rails
+Add this to your gem file
+```
+gem 'epub'
+```
 
 ## Usage
+**All actions on the epub should be done inside an open block, much like the use of File**
 
-TODO: Write usage instructions here
+### Attributes (and defaults)
+  - author_name = ''
+  - isbn = '000-0-000000-0'
+  - book_title = ''
+  - publisher = ''
+  - publication_date = Time.now.to_s
+  - table_of_contents_title = 'Table Of Contents'
+  - cover_file_name = ''
+  - styles = ''
+  - subject_classification = 'NON000000 NON-CLASSIFIABLE'
+    * **NOTE**: The list of options for _subject_classification_ can be found here https://bisg.org/page/BISACEdition
+    * Amazon makes use of this info
+  - other_data = ''
+    - Other data is something I've added, should there come a time you'd want to reverse the process.  I've personally used the data to import an exported epub.
+    - This data gets persisted in a file name 'other_data' in the META-INF folder.
 
-## Development
+### Methods
+   - **Start the block**
+    <br>`Epub::Builder.open(file_name) { |service| ... }`
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+  - **Find the path of the produced file**
+    <br>`service.path`
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+  - **Add A Chapter**
+    <br>`service.add_chapter(id, title, text)`
 
-## Contributing
+  - **Add An Image**
+    <i>
+      <br>All images that you use in your html based chapters, or as the cover page, get added through this method.
+      <br>The order added is not important
+    </i>
+    <br>`service.add_image(intenal_file_name, source_file_name)`
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/epub.
+## Non Chapter Magic
+  - **Why?**
+  Apple treat some "node" ids in a special way.  It's an ever changing way. It's courage that they don't tell devs.
+  - **The List Of Options**
+    - index
+    - glossary
+    - acknowledgements
+    - bibliography
+    - colophon
+    - copyright-page
+    - dedication
+    - epigraph
+    - foreword
+    - notes
+    - preface
+    - loi # List of images
+    - lot # List of tables
+
+## EXAMPLES
+
+- ### Create a simple 1 chapter epub, with no cover
+  ```
+    Dir.chdir(Dir.tmpdir) do
+      Epub::Builder.open('1_chapter.epub') do |service|
+        service.author_name = "David Rawk"
+        service.book_title = "Dave's Grand Tour"
+        service.add_chapter('chap_1', "Chapter 1", "<h2>Hello</h2>From <b>the</b> <i>over<s>world</s></i>.")
+      end
+    end
+  ```
+
+- ### Create a simple 2 chapter Epub with a cover image, some 'other_data' and an extended style
+  ```
+    Dir.chdir(Dir.tmpdir) do
+      Epub::Builder.open('1_chapter.epub') do |service|
+        service.author_name = "David Rawk"
+        service.book_title = "I Love Puppies"
+        service.add_chapter('chap_1', "Chapter 1", "Puppies are the best!")
+        service.add_chapter('chap_2', "Chapter 2", "They all need love")
+
+        # Add a cover image
+        service.add_image('puppers.png', 'epub/lib/epub/puppers.png')
+        service.cover_file_name = 'puppers.png'
+
+        # Add "other_data" to the epub
+        service.other_data = {user_id: 123, user_status: :awesome }.to_json
+
+        # Extend the style a bit.
+        service.style = "h2{color: red;}"
+        service.style << "h2{background-color: blue;}"
+      end
+    end
+  ```

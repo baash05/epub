@@ -1,13 +1,40 @@
 AllCops:
   TargetRubyVersion: 2.6
+  Exclude:
+    - 'spec/epub/*.rb'
 
 Style/StringLiterals:
-  Enabled: true
-  EnforcedStyle: double_quotes
+  Enabled: false
 
 Style/StringLiteralsInInterpolation:
-  Enabled: true
-  EnforcedStyle: double_quotes
+  Enabled: false
+
+Style/SingleLineBlockParams:
+  Enabled: false # braces and do..end are not equal, when I type {} I mean {}
+
+Style/Documentation:
+  Enabled: false
+
+Layout/DotPosition:
+  EnforcedStyle: trailing # Typically the . on the next line is okay,
+                          # but once in a while ruby doesn't interpret correctly
+                          # and doesn't know about the next line.
+                          # When this happens it's super hard to find, so this will avoid it.
 
 Layout/LineLength:
-  Max: 120
+  Max: 150
+
+Metrics/MethodLength:
+  Max: 25
+
+Metrics/PerceivedComplexity:
+  Max: 9
+
+Metrics/AbcSize:
+  Max: 30
+
+Metrics/BlockLength:
+  Max: 30
+
+Metrics/ClassLength:
+  Enabled: false
